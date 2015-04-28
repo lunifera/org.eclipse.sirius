@@ -12,8 +12,8 @@ package org.eclipse.sirius.business.internal.session.danalysis;
 
 import java.io.IOException;
 import java.text.MessageFormat;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.emf.ecore.resource.Resource;
@@ -50,8 +50,7 @@ public class SessionVSMUpdater implements ViewpointRegistryListener2 {
 
     @Override
     public void modelerDesciptionFilesLoaded() {
-        Collection<Resource> allResources = Lists.newArrayList(session.getTransactionalEditingDomain().getResourceSet().getResources());
-        for (Resource res : Iterables.filter(allResources, new ResourceFileExtensionPredicate(SiriusUtil.DESCRIPTION_MODEL_EXTENSION, true))) {
+        for (Resource res : findAllVSMResources(session)) {
             // Unload emtpy odesign.
             if (!res.isModified() && res.isLoaded() && res.getContents().isEmpty()) {
                 session.unregisterResourceInCrossReferencer(res);
@@ -74,5 +73,12 @@ public class SessionVSMUpdater implements ViewpointRegistryListener2 {
             }
         }
         session.notifyListeners(SessionListener.VSM_UPDATED);
+    }
+
+    /**
+     * Dumb implementation based on exhaustive search in the ResourceSet and file extension matching.
+     */
+    private static List<Resource> findAllVSMResources(DAnalysisSessionImpl session) {
+        return Lists.newArrayList(Iterables.filter(session.getTransactionalEditingDomain().getResourceSet().getResources(), new ResourceFileExtensionPredicate(SiriusUtil.DESCRIPTION_MODEL_EXTENSION, true)));
     }
 }
