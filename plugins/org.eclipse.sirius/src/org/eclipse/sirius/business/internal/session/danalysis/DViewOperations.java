@@ -30,14 +30,17 @@ import org.eclipse.sirius.business.api.dialect.DialectManager;
 import org.eclipse.sirius.business.api.extender.MetamodelDescriptorManager;
 import org.eclipse.sirius.business.api.helper.SiriusResourceHelper;
 import org.eclipse.sirius.business.api.query.DAnalysisQuery;
+import org.eclipse.sirius.business.api.query.RepresentationDescriptionQuery;
 import org.eclipse.sirius.business.api.session.SessionListener;
 import org.eclipse.sirius.business.internal.metamodel.helper.ComponentizationHelper;
 import org.eclipse.sirius.common.tools.api.util.EqualityHelper;
 import org.eclipse.sirius.ecore.extender.business.api.accessor.MetamodelDescriptor;
 import org.eclipse.sirius.ecore.extender.business.api.accessor.ModelAccessor;
 import org.eclipse.sirius.viewpoint.DAnalysis;
+import org.eclipse.sirius.viewpoint.DRepresentationContainer;
 import org.eclipse.sirius.viewpoint.DView;
 import org.eclipse.sirius.viewpoint.ViewpointFactory;
+import org.eclipse.sirius.viewpoint.description.RepresentationDescription;
 import org.eclipse.sirius.viewpoint.description.Viewpoint;
 
 import com.google.common.base.Preconditions;
@@ -59,6 +62,30 @@ final class DViewOperations {
 
     public static DViewOperations on(DAnalysisSessionImpl session) {
         return new DViewOperations(Preconditions.checkNotNull(session));
+    }
+
+    public Collection<DRepresentationContainer> getAvailableRepresentationContainers(RepresentationDescription representationDescription) {
+        final Viewpoint viewpoint = new RepresentationDescriptionQuery(representationDescription).getParentViewpoint();
+        Collection<DAnalysis> allAnalysis = session.allAnalyses();
+
+        final List<DRepresentationContainer> containers = new ArrayList<DRepresentationContainer>();
+
+        for (DAnalysis analysis : allAnalysis) {
+            DRepresentationContainer container = null;
+
+            for (final DView view : analysis.getOwnedViews()) {
+                if (view instanceof DRepresentationContainer && viewpoint == view.getViewpoint() && view.eContainer() instanceof DAnalysis) {
+                    container = (DRepresentationContainer) view;
+                    break;
+                }
+            } // for
+
+            if (container != null) {
+                containers.add(container);
+            }
+        }
+
+        return containers;
     }
 
     public Collection<Viewpoint> getSelectedViewpoints(boolean includeReferencedAnalysis) {

@@ -46,7 +46,6 @@ import org.eclipse.emf.workspace.ResourceUndoContext;
 import org.eclipse.sirius.business.api.componentization.ViewpointRegistry;
 import org.eclipse.sirius.business.api.query.DAnalysisQuery;
 import org.eclipse.sirius.business.api.query.FileQuery;
-import org.eclipse.sirius.business.api.query.RepresentationDescriptionQuery;
 import org.eclipse.sirius.business.api.query.ResourceQuery;
 import org.eclipse.sirius.business.api.resource.ResourceDescriptor;
 import org.eclipse.sirius.business.api.session.CustomDataConstants;
@@ -1115,6 +1114,18 @@ public class DAnalysisSessionImpl extends DAnalysisSessionEObjectImpl implements
     public void createView(final Viewpoint viewpoint, final Collection<EObject> semantics, final boolean createNewRepresentations, IProgressMonitor monitor) {
         DViewOperations.on(this).createView(viewpoint, semantics, createNewRepresentations, monitor);
     }
+    
+    /**
+     * Get collection of available {@link DRepresentationContainer} for the
+     * {@link RepresentationDescription}.
+     * 
+     * @param representationDescription
+     *            the representation description.
+     * @return available representation containers
+     */
+    public Collection<DRepresentationContainer> getAvailableRepresentationContainers(RepresentationDescription representationDescription) {
+        return DViewOperations.on(this).getAvailableRepresentationContainers(representationDescription);
+    }
 
     // *******************
     // Session opening and closing
@@ -1372,37 +1383,5 @@ public class DAnalysisSessionImpl extends DAnalysisSessionEObjectImpl implements
     @Override
     public String toString() {
         return "Local Session: " + getID();
-    }
-
-    /**
-     * Get collection of available {@link DRepresentationContainer} for the
-     * {@link RepresentationDescription}.
-     * 
-     * @param representationDescription
-     *            the representation description.
-     * @return available representation containers
-     */
-    public Collection<DRepresentationContainer> getAvailableRepresentationContainers(RepresentationDescription representationDescription) {
-        final Viewpoint viewpoint = new RepresentationDescriptionQuery(representationDescription).getParentViewpoint();
-        Collection<DAnalysis> allAnalysis = allAnalyses();
-
-        final List<DRepresentationContainer> containers = new ArrayList<DRepresentationContainer>();
-
-        for (DAnalysis analysis : allAnalysis) {
-            DRepresentationContainer container = null;
-
-            for (final DView view : analysis.getOwnedViews()) {
-                if (view instanceof DRepresentationContainer && viewpoint == view.getViewpoint() && view.eContainer() instanceof DAnalysis) {
-                    container = (DRepresentationContainer) view;
-                    break;
-                }
-            } // for
-
-            if (container != null) {
-                containers.add(container);
-            }
-        }
-
-        return containers;
     }
 }
