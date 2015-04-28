@@ -11,6 +11,8 @@
 
 package org.eclipse.sirius.business.internal.query;
 
+import java.util.Collection;
+
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
@@ -38,6 +40,26 @@ public class ResourceQueryInternal extends ResourceQuery {
      */
     public ResourceQueryInternal(Resource resource) {
         super(resource);
+    }
+
+    /**
+     * Checks if the current resource has any of its root controlled by one of
+     * the specified resources.
+     * 
+     * @param scope
+     *            the potential controlling resources.
+     * @return <code>true</code> if at least one of this resource's root
+     *         elements is actually controlled by one of the specified resource.
+     */
+    public boolean hasControlledRootIn(Collection<Resource> scope) {
+        for (EObject root : resource.getContents()) {
+            EObject container = root.eContainer();
+            Resource containerResource = container != null ? container.eResource() : null;
+            if (containerResource != resource && scope.contains(containerResource)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
