@@ -33,7 +33,7 @@ import com.google.common.collect.Multimap;
 
 /**
  * A {@code ResourceSetListener} to update the
- * {@link ViewpointPackage#DANALYSIS__MODELS} feature according changes in
+ * {@link ViewpointPackage#DANALYSIS__SEMANTIC_RESOURCES} feature according changes in
  * representations resources. This class also contains some methods to load + *
  * resources and detects new semantic resources.
  * 
@@ -121,7 +121,7 @@ public class DAnalysisRefresher extends ResourceSetListenerImpl {
      * @return a map associating for each {@link DAnalysis} semantic resource
      *         descriptor.
      */
-    private Multimap<DAnalysis, ResourceDescriptor> getRootSemanticResourceEltsPerRepresentationsResource(Collection<Notification> notifications) {
+    private static Multimap<DAnalysis, ResourceDescriptor> getRootSemanticResourceEltsPerRepresentationsResource(Collection<Notification> notifications) {
         Multimap<DAnalysis, ResourceDescriptor> semanticResourceDescriptors = HashMultimap.create();
         for (Notification notification : notifications) {
             if (Notification.ADD == notification.getEventType() && notification.getNewValue() instanceof DSemanticDecorator) {
@@ -137,7 +137,7 @@ public class DAnalysisRefresher extends ResourceSetListenerImpl {
         return semanticResourceDescriptors;
     }
 
-    private void registerNewReferencedResource(Multimap<DAnalysis, ResourceDescriptor> referencedSemanticModels, DAnalysis analysis, Resource semanticResource) {
+    private static void registerNewReferencedResource(Multimap<DAnalysis, ResourceDescriptor> referencedSemanticModels, DAnalysis analysis, Resource semanticResource) {
         if (semanticResource != null) {
             referencedSemanticModels.put(analysis, new ResourceDescriptor(semanticResource.getURI()));
         }
