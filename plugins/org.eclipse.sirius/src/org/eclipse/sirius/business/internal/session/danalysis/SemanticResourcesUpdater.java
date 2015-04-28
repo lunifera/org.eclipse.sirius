@@ -11,18 +11,14 @@
 package org.eclipse.sirius.business.internal.session.danalysis;
 
 import java.util.Collection;
-import java.util.Map;
 
 import org.eclipse.emf.common.notify.Adapter;
 import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.common.notify.impl.AdapterImpl;
-import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.sirius.business.api.session.SessionListener;
 import org.eclipse.sirius.viewpoint.DAnalysis;
 import org.eclipse.sirius.viewpoint.ViewpointPackage;
-
-import com.google.common.collect.Maps;
 
 /**
  * A {@link Adapter} to update the collection of semantic resources in a
@@ -35,13 +31,6 @@ public class SemanticResourcesUpdater extends AdapterImpl implements Adapter {
     private DAnalysisSessionImpl dAnalysisSessionImpl;
 
     private Collection<Resource> semanticResources;
-
-    /**
-     * This map allows to retrieve the eObject of the
-     * {@link DAnalysis.getModels} from its resource. This is useful in the
-     * event of the resource has been unloaded and eObject.eResource()==null
-     */
-    private Map<String, EObject> resourceToRootEObjectMap = Maps.newHashMap();
 
     /**
      * Default constructor.
@@ -113,6 +102,5 @@ public class SemanticResourcesUpdater extends AdapterImpl implements Adapter {
         }
         dAnalysisSessionImpl = null;
         semanticResources = null;
-        resourceToRootEObjectMap.clear();
     }
 }
