@@ -25,6 +25,8 @@ h2. Manage the version number
 
 Your migration participant has to return the Sirius version number where your migration is introduced. For example, you have to write a new migration for viewpoint 6.7.0, your migration participant @getMigrationVersion()@ has to return 6.7.0.qualifier, where the qualifier may be the current date.
 
+une migration prévue pour Sirius X.Y.Z et pushée à la date T doit avoir (X+7).Y.Z.T, avec T étant la date où le changement est *mergé* dans le code source de Sirius (et pas seulement la date où le commit initial a été créé)
+
 @getMigrationVersion()@ is used by the migration framework to determine if at least one participant has to be called, in that case the migration mechanism is launched.
 
 *Your migration participant is responsible to make sure that it has to perform its migration*. Indeed, @getMigrationVersion()@ is only used by the migration framework to determine if at least one migration is needed. You have to make sure that the viewpoint version number of the loaded resource requires a migration.
