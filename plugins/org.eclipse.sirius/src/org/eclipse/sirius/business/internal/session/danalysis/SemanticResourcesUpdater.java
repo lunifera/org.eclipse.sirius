@@ -15,10 +15,13 @@ import java.util.Collection;
 import org.eclipse.emf.common.notify.Adapter;
 import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.common.notify.impl.AdapterImpl;
+import org.eclipse.emf.ecore.EStructuralFeature;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.sirius.business.api.session.SessionListener;
 import org.eclipse.sirius.viewpoint.DAnalysis;
 import org.eclipse.sirius.viewpoint.ViewpointPackage;
+
+import com.google.common.collect.Lists;
 
 /**
  * A {@link Adapter} to update the collection of semantic resources in a
@@ -28,19 +31,23 @@ import org.eclipse.sirius.viewpoint.ViewpointPackage;
  */
 public class SemanticResourcesUpdater extends AdapterImpl implements Adapter {
 
-    private DAnalysisSessionImpl dAnalysisSessionImpl;
+    private static final Collection<EStructuralFeature> FEATURES_OF_INTEREST = Lists.newArrayList(ViewpointPackage.Literals.DANALYSIS_SESSION_EOBJECT__ANALYSES,
+            ViewpointPackage.Literals.DANALYSIS__REFERENCED_ANALYSIS, ViewpointPackage.Literals.DANALYSIS_SESSION_EOBJECT__ANALYSES, ViewpointPackage.Literals.DANALYSIS__SEMANTIC_RESOURCES,
+            ViewpointPackage.Literals.DANALYSIS_SESSION_EOBJECT__CONTROLLED_RESOURCES);;
+
+    private DAnalysisSessionImpl session;
 
     private Collection<Resource> semanticResources;
 
     /**
      * Default constructor.
      * 
-     * @param dAnalysisSessionImpl
+     * @param session
      *            the {@link DAnalysisSessionImpl} referencing the semantic
      *            resource
      */
-    public SemanticResourcesUpdater(DAnalysisSessionImpl dAnalysisSessionImpl) {
-        this.dAnalysisSessionImpl = dAnalysisSessionImpl;
+    public SemanticResourcesUpdater(DAnalysisSessionImpl session) {
+        this.session = session;
     }
 
     /**
@@ -50,7 +57,7 @@ public class SemanticResourcesUpdater extends AdapterImpl implements Adapter {
      *            the collection of semantic resources of the Session
      */
     public void setSemanticResources(Collection<Resource> semanticResources) {
-        for (DAnalysis dAnalysis : this.dAnalysisSessionImpl.allAnalyses()) {
+        for (DAnalysis dAnalysis : this.session.allAnalyses()) {
             if (!dAnalysis.eAdapters().contains(this)) {
                 dAnalysis.eAdapters().add(this);
             }
@@ -60,14 +67,8 @@ public class SemanticResourcesUpdater extends AdapterImpl implements Adapter {
 
     @Override
     public void notifyChanged(Notification msg) {
-        // CHECKSTYLE:OFF
-        if (msg.getEventType() != Notification.REMOVING_ADAPTER
-                && (msg.getFeature() == ViewpointPackage.Literals.DANALYSIS_SESSION_EOBJECT__ANALYSES || msg.getFeature() == ViewpointPackage.Literals.DANALYSIS__REFERENCED_ANALYSIS
-                        || msg.getFeature() == ViewpointPackage.Literals.DANALYSIS_SESSION_EOBJECT__ANALYSES || msg.getFeature() == ViewpointPackage.Literals.DANALYSIS__SEMANTIC_RESOURCES || msg
-                        .getFeature() == ViewpointPackage.Literals.DANALYSIS_SESSION_EOBJECT__CONTROLLED_RESOURCES)) {
-            // CHECKSTYLE:ON
-
-            Collection<Resource> updatedSemanticResources = SemanticResourceGetter.collectTopLevelSemanticResources(dAnalysisSessionImpl);
+        if (isEventOfInterest(msg)) {
+            Collection<Resource> updatedSemanticResources = SemanticResourceGetter.collectTopLevelSemanticResources(session);
 
             boolean newSemanticResourceAdded = false;
             for (Resource semanticResource : updatedSemanticResources) {
@@ -76,7 +77,7 @@ public class SemanticResourcesUpdater extends AdapterImpl implements Adapter {
 
                     // Ensure that the cross referencer adapter is on the
                     // semantic resource.
-                    dAnalysisSessionImpl.registerResourceInCrossReferencer(semanticResource);
+                    session.registerResourceInCrossReferencer(semanticResource);
                 }
             }
 
@@ -86,21 +87,25 @@ public class SemanticResourcesUpdater extends AdapterImpl implements Adapter {
                 semanticResources.clear();
                 semanticResources.addAll(updatedSemanticResources);
 
-                dAnalysisSessionImpl.notifyListeners(SessionListener.SEMANTIC_CHANGE);
+                session.notifyListeners(SessionListener.SEMANTIC_CHANGE);
             }
         }
+    }
+
+    private boolean isEventOfInterest(Notification msg) {
+        return (msg.getEventType() != Notification.REMOVING_ADAPTER) && FEATURES_OF_INTEREST.contains(msg.getFeature());
     }
 
     /**
      * Dispose this updater.
      */
     public void dispose() {
-        for (DAnalysis dAnalysis : this.dAnalysisSessionImpl.allAnalyses()) {
+        for (DAnalysis dAnalysis : this.session.allAnalyses()) {
             if (dAnalysis.eAdapters().contains(this)) {
                 dAnalysis.eAdapters().remove(this);
             }
         }
-        dAnalysisSessionImpl = null;
+        session = null;
         semanticResources = null;
     }
 }
